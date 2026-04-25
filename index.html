@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Para mi Jennys 💖</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pink: #f48fb1;
+      --pink-light: #fce4ec;
+      --pink-dark: #e91e8c;
+      --rose: #ff80ab;
+      --white: #fff;
+      --shadow: 0 4px 20px rgba(233,30,140,.15);
+      --radius: 18px;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 40%, #fce4ec 100%);
+      min-height: 100vh;
+      color: #5a2d4c;
+    }
+
+    /* ===== PANTALLA CONTRASEÑA ===== */
+    #lock-screen {
+      position: fixed; inset: 0; z-index: 1000;
+      background: linear-gradient(135deg, #fce4ec, #f8bbd0, #fce4ec);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lock-card {
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      max-width: 360px; width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .lock-card .lock-icon { font-size: 3rem; margin-bottom: .5rem; }
+    .lock-card h2 { font-size: 1.4rem; margin-bottom: .5rem; color: var(--pink-dark); }
+    .lock-card p { font-size: .9rem; color: #888; margin-bottom: 1.5rem; line-height: 1.5; }
+    .lock-card input {
+      width: 100%; padding: .8rem 1rem;
+      border: 2px solid var(--pink);
+      border-radius: 50px; font-size: 1.1rem;
+      text-align: center; letter-spacing: .3rem;
+      outline: none; margin-bottom: 1rem;
+      background: #fff5f8;
+      transition: border-color .3s;
+    }
+    .lock-card input:focus { border-color: var(--pink-dark); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+      color: #fff; border: none; border-radius: 50px;
+      padding: .8rem 2rem; font-size: 1rem; cursor: pointer;
+      width: 100%; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 15px rgba(233,30,140,.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,30,140,.4); }
+    .error-msg { color: #e91e63; font-size: .85rem; margin-top: .5rem; min-height: 1.2rem; }
+
+    /* ===== MODAL BIENVENIDA ===== */
+    #welcome-modal {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(0,0,0,.4);
+      display: none; align-items: center; justify-content: center;
+    }
+    #welcome-modal.show { display: flex; }
+    .welcome-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      max-width: 360px; width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow);
+      animation: popIn .4s ease;
+    }
+    .welcome-card .heart { font-size: 3.5rem; animation: pulse 1.2s infinite; }
+    .welcome-card h2 { font-size: 1.3rem; margin: 1rem 0; color: var(--pink-dark); }
+    .welcome-card p { font-size: .95rem; color: #777; line-height: 1.6; margin-bottom: 1.5rem; }
+
+    /* ===== APP (oculto hasta pasar contraseña) ===== */
+    #app { display: none; }
+    #app.show { display: block; }
+
+    /* ===== HEADER ===== */
+    header {
+      background: rgba(255,255,255,.8);
+      backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 100;
+      padding: .8rem 1rem;
+      box-shadow: 0 2px 10px rgba(233,30,140,.1);
+      text-align: center;
+    }
+    header h1 { font-size: 1.2rem; color: var(--pink-dark); }
+
+    /* ===== NAV ===== */
+    nav {
+      display: flex; justify-content: center; gap: .5rem;
+      padding: .8rem 1rem;
+      position: sticky; top: 56px; z-index: 99;
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(8px);
+    }
+    .nav-btn {
+      background: #fff; border: 2px solid var(--pink);
+      color: var(--pink-dark); border-radius: 50px;
+      padding: .5rem 1.2rem; font-size: .9rem; cursor: pointer;
+      transition: all .25s;
+    }
+    .nav-btn.active, .nav-btn:hover {
+      background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+      color: #fff; border-color: transparent;
+    }
+
+    /* ===== SECTIONS ===== */
+    .section { display: none; padding: 1rem; max-width: 480px; margin: 0 auto; }
+    .section.active { display: block; }
+
+    /* ===== FOTOS ===== */
+    .photo-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .photo-item {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform .3s, box-shadow .3s;
+      aspect-ratio: 3/4;
+      background: #fce4ec;
+      width: 100%;
+    }
+    .photo-item:hover { transform: scale(1.02); box-shadow: 0 8px 30px rgba(233,30,140,.25); }
+    .photo-item img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform .4s;
+    }
+    .photo-item:hover img { transform: scale(1.05); }
+
+    /* ===== MODAL FOTO ===== */
+    #photo-modal {
+      position: fixed; inset: 0; z-index: 800;
+      background: rgba(0,0,0,.92);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    #photo-modal.show { display: flex; }
+    #photo-modal img {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: var(--radius);
+      display: block;
+      margin-top: 3rem;
+    }
+    .modal-actions {
+      display: flex; gap: 1rem;
+      margin: 1rem 0 2rem;
+      position: sticky; bottom: 1rem;
+    }
+    .btn-icon {
+      background: rgba(255,255,255,.15);
+      border: 2px solid rgba(255,255,255,.4);
+      color: #fff; border-radius: 50px;
+      padding: .6rem 1.4rem; cursor: pointer;
+      font-size: .9rem; transition: background .2s;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,.3); }
+
+    /* ===== CARTA ===== */
+    .letter-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      box-shadow: var(--shadow);
+      line-height: 1.8;
+      font-size: .95rem;
+      color: #5a2d4c;
+      position: relative;
+    }
+    .letter-card::before {
+      content: '💌';
+      font-size: 2.5rem;
+      display: block;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .letter-card h3 {
+      text-align: center;
+      color: var(--pink-dark);
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    .letter-card p { margin-bottom: 1rem; }
+    .letter-signature { text-align: right; font-style: italic; color: var(--pink-dark); }
+
+    /* ===== VALES ===== */
+    .vales-grid {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .vale-card {
+      background: linear-gradient(135deg, #fff5f8, #fce4ec);
+      border: 2px dashed var(--pink);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: var(--shadow);
+      gap: 1rem;
+    }
+    .vale-info { flex: 1; }
+    .vale-emoji { font-size: 1.8rem; margin-bottom: .2rem; }
+    .vale-title { font-weight: 700; color: var(--pink-dark); font-size: 1rem; }
+    .vale-uses { font-size: .75rem; color: #aaa; margin-top: .2rem; }
+    .btn-canjear {
+      background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+      color: #fff; border: none; border-radius: 50px;
+      padding: .6rem 1.2rem; font-size: .85rem; cursor: pointer;
+      white-space: nowrap;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 3px 10px rgba(233,30,140,.3);
+    }
+    .btn-canjear:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(233,30,140,.4); }
+
+    /* ===== ANIMACIONES ===== */
+    @keyframes popIn {
+      from { transform: scale(.8); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.15); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .section.active { animation: fadeIn .35s ease; }
+  </style>
+</head>
+<body>
+
+<!-- ===== PANTALLA CONTRASEÑA ===== -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-icon">🔐</div>
+    <h2>Acceso privado</h2>
+    <p>La clave es el día en que empezó todo para nosotros 💕</p>
+    <input type="password" id="pwd-input" placeholder="••••••" maxlength="10"
+           onkeydown="if(event.key==='Enter') checkPassword()" />
+    <button class="btn-primary" onclick="checkPassword()">Entrar 💖</button>
+    <p class="error-msg" id="pwd-error"></p>
+  </div>
+</div>
+
+<!-- ===== MODAL BIENVENIDA ===== -->
+<div id="welcome-modal">
+  <div class="welcome-card">
+    <div class="heart">💖</div>
+    <h2>¡Hola, mi Jennys!</h2>
+    <p>Esta página fue hecha como parte de un regalo para mi Jennys 💖, hecha con mucho amor 🌹</p>
+    <button class="btn-primary" onclick="closeWelcome()">Continuar 💕</button>
+  </div>
+</div>
+
+<!-- ===== APP PRINCIPAL ===== -->
+<div id="app">
+  <header>
+    <h1>💖 Para mi Jennys</h1>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="showSection('fotos', this)">📸 Fotos</button>
+    <button class="nav-btn" onclick="showSection('carta', this)">💌 Carta</button>
+    <button class="nav-btn" onclick="showSection('vales', this)">🎟️ Vales</button>
+  </nav>
+
+  <!-- FOTOS -->
+  <section id="fotos" class="section active">
+    <div class="photo-grid" id="photo-grid">
+      <!-- Las fotos se cargan automáticamente desde la carpeta fotos/ -->
+    </div>
+  </section>
+
+  <!-- CARTA -->
+  <section id="carta" class="section">
+    <div class="letter-card">
+      <h3>Para mi Jennys 🌹</h3>
+      <!--
+        EDITA EL TEXTO DE LA CARTA AQUÍ:
+      -->
+      <p>Mi amor,</p>
+      <p>
+        Hay cosas que las palabras no alcanzan a describir, pero lo intento de todas formas
+        porque mereces saberlo: eres la persona más especial que ha llegado a mi vida.
+      </p>
+      <p>
+        Cada momento contigo se convierte en un recuerdo que guardo con mucho cariño.
+        Tu sonrisa, tu forma de ser, todo en ti me hace querer darte lo mejor.
+      </p>
+      <p>
+        Esta página es solo una pequeña muestra de todo lo que siento por ti.
+        Espero que cada detalle te haga sonreír tanto como tú me haces sonreír a mí.
+      </p>
+      <p>
+        Te quiero muchísimo, mi Jennys. Gracias por existir y por dejarme estar en tu vida. 💖
+      </p>
+      <p class="letter-signature">Con todo mi amor,<br>Tuyo siempre 🌹</p>
+    </div>
+  </section>
+
+  <!-- VALES -->
+  <section id="vales" class="section">
+    <div class="vales-grid" id="vales-grid">
+      <!-- Los vales se generan con JavaScript -->
+    </div>
+  </section>
+</div>
+
+<!-- MODAL FOTO AMPLIADA -->
+<div id="photo-modal" onclick="closePhotoModal(event)">
+  <img id="modal-img" src="" alt="" />
+  <div class="modal-actions">
+    <button class="btn-icon" onclick="downloadPhoto()">⬇️ Descargar</button>
+    <button class="btn-icon" onclick="closePhotoModal()">✕ Cerrar</button>
+  </div>
+</div>
+
+<script>
+  
+
+  const PASSWORD  = '140221';
+  const WA_NUMBER = '6181080830';
+
+  // ── FOTOS ──────────────────────────────────────────────────────────────
+  // Agrega aquí los nombres de tus archivos dentro de la carpeta fotos/
+  const FOTOS = [
+    'foto1.jpg',
+    'foto2.jpg',
+    'foto3.jpg',
+    'foto4.jpg',
+    'foto5.jpg',
+    'foto6.jpg',
+  ];
+
+  const photoGrid = document.getElementById('photo-grid');
+  FOTOS.forEach((nombre, i) => {
+    const src = `fotos/${nombre}`;
+    const div = document.createElement('div');
+    div.className = 'photo-item';
+    div.onclick = () => openPhoto(src, `Foto ${i + 1}`);
+    div.innerHTML = `<img src="${src}" alt="Foto ${i + 1}" loading="lazy" />`;
+    photoGrid.appendChild(div);
+  });
+  // ───────────────────────────────────────────────────────────────────────
+
+  const vales = [
+    { emoji: '🤌', title: 'Vale por una dedeada' },
+    { emoji: '💃', title: 'Vale por un baile' },
+    { emoji: '🔥', title: 'Vale por un coito 😏' },
+    { emoji: '💋', title: 'Vale por muchos besos' },
+    { emoji: '🤗', title: 'Vale por muchos abrazos' },
+    { emoji: '🙌', title: 'Vale por una manoseada' },
+    { emoji: '😈', title: 'Vale para que me haga lo que quiera' },
+    { emoji: '✨', title: 'Vale para cumplir una fantasía' },
+    { emoji: '🍑', title: 'Vale por una nalgada' },
+  ];
+
+  // Renderizar vales
+  const grid = document.getElementById('vales-grid');
+  vales.forEach(v => {
+    grid.innerHTML += `
+      <div class="vale-card">
+        <div class="vale-info">
+          <div class="vale-emoji">${v.emoji}</div>
+          <div class="vale-title">${v.title}</div>
+          <div class="vale-uses">Usos ilimitados ♾️</div>
+        </div>
+        <button class="btn-canjear" onclick="canjear('${v.title}')">Canjear</button>
+      </div>`;
+  });
+
+  // Verificar contraseña
+  function checkPassword() {
+    const val = document.getElementById('pwd-input').value.trim();
+    if (val === PASSWORD) {
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('welcome-modal').classList.add('show');
+    } else {
+      const err = document.getElementById('pwd-error');
+      err.textContent = '❌ Contraseña incorrecta, inténtalo de nuevo 💔';
+      document.getElementById('pwd-input').value = '';
+      setTimeout(() => err.textContent = '', 3000);
+    }
+  }
+
+  // Cerrar modal bienvenida
+  function closeWelcome() {
+    document.getElementById('welcome-modal').classList.remove('show');
+    document.getElementById('app').classList.add('show');
+  }
+
+  // Cambiar sección
+  function showSection(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Abrir foto en modal
+  let currentPhotoSrc = '';
+  function openPhoto(src, alt) {
+    currentPhotoSrc = src;
+    document.getElementById('modal-img').src = src;
+    document.getElementById('modal-img').alt = alt;
+    document.getElementById('photo-modal').classList.add('show');
+  }
+
+  // Cerrar modal foto
+  function closePhotoModal(e) {
+    if (!e || e.target !== document.getElementById('modal-img'))
+      document.getElementById('photo-modal').classList.remove('show');
+  }
+
+  // Descargar foto
+  function downloadPhoto() {
+    const a = document.createElement('a');
+    a.href = currentPhotoSrc;
+    a.download = 'foto-jennys.jpg';
+    a.target = '_blank';
+    a.click();
+  }
+
+  // Canjear vale por WhatsApp
+  function canjear(nombre) {
+    const msg = encodeURIComponent(`Quiero canjear el vale de: ${nombre} 😏`);
+    window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+  }
+</script>
+</body>
+</html>
