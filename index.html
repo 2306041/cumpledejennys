@@ -98,12 +98,17 @@
 
     /* ===== NAV ===== */
     nav {
-      display: flex; justify-content: center; gap: .5rem;
+      display: flex; justify-content: flex-start; gap: .5rem;
       padding: .8rem 1rem;
       position: sticky; top: 56px; z-index: 99;
       background: rgba(255,255,255,.7);
       backdrop-filter: blur(8px);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
+    nav::-webkit-scrollbar { display: none; }
+    .nav-btn { flex-shrink: 0; }
     .nav-btn {
       background: #fff; border: 2px solid var(--pink);
       color: var(--pink-dark); border-radius: 50px;
@@ -389,20 +394,23 @@
         EDITA EL TEXTO DE LA CARTA AQUÍ:
       -->
       <p>Mi amor,</p>
+      <p>¡Feliz cumpleaños! Espero que este día sea tan especial como tú lo eres para mí. </p>
       <p>
-        Hay cosas que las palabras no alcanzan a describir, pero lo intento de todas formas
-        porque mereces saberlo: eres la persona más especial que ha llegado a mi vida.
+        Quiero que sepas que siempre estaré para ti, en los buenos momentos y en los difíciles,
+        cuando me necesites aquí voy a estar. Siempre.
       </p>
       <p>
-        Cada momento contigo se convierte en un recuerdo que guardo con mucho cariño.
-        Tu sonrisa, tu forma de ser, todo en ti me hace querer darte lo mejor.
+        Me gusta muucho como eres, tu forma de ser, tu personalidad, todo en ti.
+        Y no puedo dejar de decirte que tienes un cuerpo muy bonito. 
       </p>
       <p>
-        Esta página es solo una pequeña muestra de todo lo que siento por ti.
-        Espero que cada detalle te haga sonreír tanto como tú me haces sonreír a mí.
+        Estaré para ti cuando lo necesites, no lo dudes ni un segundo.
       </p>
       <p>
-        Te quiero muchísimo, mi Jennys. Gracias por existir y por dejarme estar en tu vida. 💖
+        Te amo, mi Jennys. Con todo lo que soy.
+      </p>
+      <p>
+        Esta página la hice con mucho amor, pensando en ti, para que sepas lo importante que eres para mí. 💖
       </p>
       <p class="letter-signature">Con todo mi amor,<br>Tuyo siempre 🌹</p>
     </div>
@@ -457,37 +465,16 @@
 
   // ── FOTOS ──────────────────────────────────────────────────────────────
   // Agrega aquí los nombres de tus archivos dentro de la carpeta fotos/
-  const FOTOS = [
-    'foto1.jpg',
-    'foto2.jpg',
-    'foto3.jpg',
-    'foto4.jpg',
-    'foto5.jpg',
-    'foto6.jpg',
-    'foto7.jpg',
-    'foto8.jpg',
-    'foto9.jpg',
-    'foto10.jpg',
-    'foto11.jpg',
-    'foto12.jpg',
-    'foto13.jpg',
-    'foto14.jpg',
-    'foto15.jpg',
-    'foto16.jpg',
-    'foto17.jpg',
-    'foto18.jpg',
-    'foto19.jpg',
-    'foto20.jpg',
-    'foto21.jpg',
-    'foto22.jpg',
-    'foto23.jpg',
-    'foto24.jpg',
-    'foto25.jpg',
-  ];
+  const FOTOS = Array.from({length: 147}, (_, i) => {
+    const n = i + 1;
+    if (n === 52) return 'foto52.jpeg';
+    if (n === 147) return 'foto147.png';
+    return `foto${n}.jpg`;
+  });
 
   const photoGrid = document.getElementById('photo-grid');
   FOTOS.forEach((nombre, i) => {
-    const src = `fotos/${nombre}`;
+    const src = `${nombre}`;
     const div = document.createElement('div');
     div.className = 'photo-item';
     div.onclick = () => openPhoto(src, `Foto ${i + 1}`);
