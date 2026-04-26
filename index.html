@@ -125,6 +125,11 @@
       flex-direction: column;
       gap: 1rem;
     }
+    .photo-grid.grid-mode {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .5rem;
+    }
     .photo-item {
       border-radius: var(--radius);
       overflow: hidden;
@@ -135,6 +140,7 @@
       background: #fce4ec;
       width: 100%;
     }
+    .photo-grid.grid-mode .photo-item { border-radius: 10px; }
     .photo-item:hover { transform: scale(1.02); box-shadow: 0 8px 30px rgba(233,30,140,.25); }
     .photo-item img {
       width: 100%; height: 100%;
@@ -142,6 +148,23 @@
       transition: transform .4s;
     }
     .photo-item:hover img { transform: scale(1.05); }
+    .photo-toolbar {
+      display: flex; justify-content: flex-end; margin-bottom: .6rem;
+    }
+    .btn-grid-toggle {
+      background: rgba(255,255,255,.85);
+      border: 2px solid var(--pink);
+      border-radius: 50px;
+      padding: .35rem .9rem;
+      font-size: .8rem;
+      color: var(--pink-dark);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-grid-toggle:hover {
+      background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+      color: #fff; border-color: transparent;
+    }
 
     /* ===== MODAL FOTO ===== */
     #photo-modal {
@@ -243,9 +266,73 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     .section.active { animation: fadeIn .35s ease; }
+
+    /* ===== CANVAS CORAZONES ===== */
+    #hearts-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+    }
+    #app, #lock-screen, #welcome-modal { position: relative; z-index: 1; }
+
+    /* ===== BOTÓN MÚSICA ===== */
+    #music-btn {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500;
+      background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+      border: none; border-radius: 50%; width: 52px; height: 52px;
+      font-size: 1.4rem; cursor: pointer; display: none;
+      box-shadow: 0 4px 15px rgba(233,30,140,.4);
+      transition: transform .2s;
+    }
+    #music-btn:hover { transform: scale(1.1); }
+    #music-btn.show { display: flex; align-items: center; justify-content: center; }
+
+    /* ===== CONTADOR ===== */
+    .counter-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .counter-card .counter-title {
+      font-size: 1rem; color: var(--pink-dark); margin-bottom: 1.5rem; font-weight: 700;
+    }
+    .counter-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem;
+    }
+    .counter-unit {
+      background: linear-gradient(135deg, #fff5f8, #fce4ec);
+      border-radius: 14px; padding: .8rem .4rem;
+      border: 2px solid var(--pink);
+    }
+    .counter-num {
+      font-size: 1.6rem; font-weight: 800; color: var(--pink-dark); line-height: 1;
+    }
+    .counter-label { font-size: .65rem; color: #aaa; margin-top: .3rem; }
+    .counter-since { font-size: .8rem; color: #bbb; margin-top: 1.2rem; }
+
+    /* ===== RAZONES ===== */
+    .razones-list { display: flex; flex-direction: column; gap: .8rem; }
+    .razon-item {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: .9rem;
+      animation: fadeIn .4s ease both;
+    }
+    .razon-num {
+      background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+      color: #fff; border-radius: 50%; width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 700; flex-shrink: 0;
+    }
+    .razon-text { font-size: .92rem; color: #5a2d4c; line-height: 1.4; }
   </style>
 </head>
 <body>
+
+<canvas id="hearts-canvas"></canvas>
 
 <!-- ===== PANTALLA CONTRASEÑA ===== -->
 <div id="lock-screen">
@@ -280,10 +367,15 @@
     <button class="nav-btn active" onclick="showSection('fotos', this)">📸 Fotos</button>
     <button class="nav-btn" onclick="showSection('carta', this)">💌 Carta</button>
     <button class="nav-btn" onclick="showSection('vales', this)">🎟️ Vales</button>
+    <button class="nav-btn" onclick="showSection('contador', this)">⏳ Nosotros</button>
+    <button class="nav-btn" onclick="showSection('razones', this)">💕 Razones</button>
   </nav>
 
   <!-- FOTOS -->
   <section id="fotos" class="section active">
+    <div class="photo-toolbar">
+      <button class="btn-grid-toggle" id="btn-grid-toggle" onclick="toggleGrid()">⊞ Ver en cuadrícula</button>
+    </div>
     <div class="photo-grid" id="photo-grid">
       <!-- Las fotos se cargan automáticamente desde la carpeta fotos/ -->
     </div>
@@ -322,7 +414,31 @@
       <!-- Los vales se generan con JavaScript -->
     </div>
   </section>
+
+  <!-- CONTADOR -->
+  <section id="contador" class="section">
+    <div class="counter-card">
+      <div class="counter-title">💖 Tiempo juntos</div>
+      <div class="counter-grid">
+        <div class="counter-unit"><div class="counter-num" id="cnt-dias">0</div><div class="counter-label">Días</div></div>
+        <div class="counter-unit"><div class="counter-num" id="cnt-horas">0</div><div class="counter-label">Horas</div></div>
+        <div class="counter-unit"><div class="counter-num" id="cnt-mins">0</div><div class="counter-label">Minutos</div></div>
+        <div class="counter-unit"><div class="counter-num" id="cnt-segs">0</div><div class="counter-label">Segundos</div></div>
+      </div>
+      <div class="counter-since">Desde el 14 de febrero de 2021 💕</div>
+    </div>
+  </section>
+
+  <!-- RAZONES -->
+  <section id="razones" class="section">
+    <div class="razones-list" id="razones-list"></div>
+  </section>
 </div>
+
+<button id="music-btn" title="Música">🎵</button>
+<audio id="bg-music" loop>
+  <source src="musica.mp3" type="audio/mpeg">
+</audio>
 
 <!-- MODAL FOTO AMPLIADA -->
 <div id="photo-modal" onclick="closePhotoModal(event)">
@@ -336,7 +452,7 @@
 <script>
   
 
-  const PASSWORD  = '140221';
+  const PASSWORD  = '14022021';
   const WA_NUMBER = '6181080830';
 
   // ── FOTOS ──────────────────────────────────────────────────────────────
@@ -348,6 +464,25 @@
     'foto4.jpg',
     'foto5.jpg',
     'foto6.jpg',
+    'foto7.jpg',
+    'foto8.jpg',
+    'foto9.jpg',
+    'foto10.jpg',
+    'foto11.jpg',
+    'foto12.jpg',
+    'foto13.jpg',
+    'foto14.jpg',
+    'foto15.jpg',
+    'foto16.jpg',
+    'foto17.jpg',
+    'foto18.jpg',
+    'foto19.jpg',
+    'foto20.jpg',
+    'foto21.jpg',
+    'foto22.jpg',
+    'foto23.jpg',
+    'foto24.jpg',
+    'foto25.jpg',
   ];
 
   const photoGrid = document.getElementById('photo-grid');
@@ -364,13 +499,13 @@
   const vales = [
     { emoji: '🤌', title: 'Vale por una dedeada' },
     { emoji: '💃', title: 'Vale por un baile' },
-    { emoji: '🔥', title: 'Vale por un coito 😏' },
+    { emoji: '🔥', title: 'Vale por un coito' },
     { emoji: '💋', title: 'Vale por muchos besos' },
     { emoji: '🤗', title: 'Vale por muchos abrazos' },
     { emoji: '🙌', title: 'Vale por una manoseada' },
     { emoji: '😈', title: 'Vale para que me haga lo que quiera' },
     { emoji: '✨', title: 'Vale para cumplir una fantasía' },
-    { emoji: '🍑', title: 'Vale por una nalgada' },
+    { emoji: '👋', title: 'Vale por una nalgada' },
   ];
 
   // Renderizar vales
@@ -405,6 +540,7 @@
   function closeWelcome() {
     document.getElementById('welcome-modal').classList.remove('show');
     document.getElementById('app').classList.add('show');
+    document.getElementById('music-btn').classList.add('show');
   }
 
   // Cambiar sección
@@ -413,6 +549,14 @@
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
+  }
+
+  // Toggle cuadrícula
+  let gridMode = false;
+  function toggleGrid() {
+    gridMode = !gridMode;
+    document.getElementById('photo-grid').classList.toggle('grid-mode', gridMode);
+    document.getElementById('btn-grid-toggle').textContent = gridMode ? '▭ Ver normal' : '⊞ Ver en cuadrícula';
   }
 
   // Abrir foto en modal
@@ -438,6 +582,89 @@
     a.target = '_blank';
     a.click();
   }
+
+  // ── CONTADOR ──────────────────────────────────────────────────────────
+  const START = new Date('2021-02-14T00:00:00');
+  function updateCounter() {
+    const totalSecs = Math.floor((Date.now() - START.getTime()) / 1000);
+    document.getElementById('cnt-dias').textContent  = Math.floor(totalSecs / 86400);
+    document.getElementById('cnt-horas').textContent = Math.floor((totalSecs % 86400) / 3600);
+    document.getElementById('cnt-mins').textContent  = Math.floor((totalSecs % 3600) / 60);
+    document.getElementById('cnt-segs').textContent  = totalSecs % 60;
+  }
+  updateCounter();
+  setInterval(updateCounter, 1000);
+
+  // ── RAZONES ──────────────────────────────────────────────────────────
+  const RAZONES = [
+    'Tu forma de ser ✨',
+    'Tu gran corazón 💞',
+    'Tu carita bonita 😊',
+    'Tu sonrisa 😄',
+    'Eres una persona maravillosa 🌟',
+    'Tu ternura 🌸',
+    'Tus ojos 👀',
+    'Y lo más importante... por existir 💖',
+  ];
+  const razonesList = document.getElementById('razones-list');
+  RAZONES.forEach((r, i) => {
+    razonesList.innerHTML += `
+      <div class="razon-item" style="animation-delay:${i * .07}s">
+        <div class="razon-num">${i + 1}</div>
+        <div class="razon-text">${r}</div>
+      </div>`;
+  });
+
+  // ── MÚSICA ───────────────────────────────────────────────────────────
+  const musicBtn = document.getElementById('music-btn');
+  const bgMusic  = document.getElementById('bg-music');
+  let playing = false;
+  musicBtn.addEventListener('click', () => {
+    playing ? bgMusic.pause() : bgMusic.play();
+    playing = !playing;
+    musicBtn.textContent = playing ? '🔇' : '🎵';
+  });
+
+  // ── LLUVIA DE CORAZONES ──────────────────────────────────────────────
+  const canvas = document.getElementById('hearts-canvas');
+  const ctx    = canvas.getContext('2d');
+  const HEARTS = ['💖','💕','🌸','✨','💗','🌹'];
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function spawnHeart() {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -20,
+      size: 12 + Math.random() * 14,
+      speed: .4 + Math.random() * .6,
+      drift: (Math.random() - .5) * .4,
+      opacity: .4 + Math.random() * .4,
+      char: HEARTS[Math.floor(Math.random() * HEARTS.length)]
+    });
+  }
+
+  function animateHearts() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      ctx.globalAlpha = p.opacity;
+      ctx.font = `${p.size}px serif`;
+      ctx.fillText(p.char, p.x, p.y);
+      p.y += p.speed;
+      p.x += p.drift;
+    });
+    ctx.globalAlpha = 1;
+    particles = particles.filter(p => p.y < canvas.height + 30);
+    requestAnimationFrame(animateHearts);
+  }
+  setInterval(spawnHeart, 600);
+  animateHearts();
 
   // Canjear vale por WhatsApp
   function canjear(nombre) {
